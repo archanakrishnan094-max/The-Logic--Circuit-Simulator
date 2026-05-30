@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logic Circuit Simulator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; }
+    h1 { font-size: 20px; font-weight: 600; padding: 16px 20px 0; }
+    .subtitle { font-size: 13px; color: #666; padding: 4px 20px 12px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; border-bottom: 1px solid #ddd; background: #fff; padding: 0 20px; }
+    .tab { padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab.active { color: #1a1a18; border-bottom-color: #1a1a18; }
+
+    /* ── Gate Cards (Tab 1) ── */
+    .gates-section { padding: 16px 20px; }
+    .legend { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .gates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .gate-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 12px; padding: 14px 16px; }
+    .gate-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .gate-desc { font-size: 12px; color: #666; margin-bottom: 12px; line-height: 1.5; }
+    .gate-io { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .io-group { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .input-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ccc; background: #f0f0ea; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .input-btn.on { background: #1D9E75; border-color: #0F6E56; color: #fff; }
+    .output-bubble { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; border: 1px solid #ccc; background: #f0f0ea; color: #888; transition: background .15s; }
+    .output-bubble.high { background: #1D9E75; border-color: #0F6E56; color: #fff; }
+    .pin-label { font-size: 11px; color: #999; }
+    .symbol-box { font-size: 16px; font-weight: 600; color: #999; }
+    .arrow { font-size: 18px; color: #ccc; }
+    .challenge-box { background: #fff; border: 1px solid #e0e0d8; border-radius: 12px; padding: 16px 20px; margin: 16px 20px 0; }
+    .challenge-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .challenge-desc { font-size: 13px; color: #666; margin-bottom: 12px; }
+    .chal-nav { display: flex; gap: 8px; align-items: center; }
+    .chal-btn { padding: 6px 14px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; cursor: pointer; }
+    .chal-status { font-size: 13px; font-weight: 600; margin-left: 6px; }
+    .chal-status.solved { color: #1D9E75; }
+
+    /* ── Sandbox (Tab 2) ── */
+    .sandbox-wrap { display: flex; flex-direction: column; height: calc(100vh - 130px); }
+    .toolbar { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #ddd; background: #fff; flex-wrap: wrap; align-items: center; }
+    .tb-label { font-size: 12px; color: #888; }
+    .gate-chip { padding: 5px 12px; font-size: 12px; font-weight: 500; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; cursor: pointer; user-select: none; }
+    .gate-chip:hover { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+    .gate-chip.selected { background: #378ADD; color: #fff; border-color: #1a6ab0; }
+    .tb-sep { width: 1px; background: #ddd; height: 20px; }
+    .tb-btn { padding: 5px 12px; font-size: 12px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f0; cursor: pointer; }
+    .tb-btn.danger { color: #a32d2d; border-color: #f09595; }
+    .canvas-area { flex: 1; position: relative; overflow: hidden; background: #fafaf6; }
+    svg#circuit { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+    .hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #999; pointer-events: none; background: #fff; padding: 4px 12px; border-radius: 20px; border: 1px solid #eee; white-space: nowrap; }
+    .toggle-btn { position: absolute; border-radius: 50%; border: 2px solid #378ADD; background: #f0f0ea; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; z-index: 10; }
+    .toggle-btn.on { background: #1D9E75; border-color: #0F6E56; color: #fff; }
+
+    /* panel switching */
+    .panel { display: none; }
+    .panel.active { display: block; }
+    #tab2.active { display: flex; flex-direction: column; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Logic Circuit Simulator</h1>
+<p class="subtitle">Learn digital logic by building and experimenting</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(0)">Gate Explorer</button>
+  <button class="tab" onclick="switchTab(1)">Circuit Sandbox</button>
+</div>
+
+<!-- TAB 1: Gate Explorer -->
+<div class="panel active" id="tab1">
+  <div class="gates-section">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div> HIGH (1)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ccc; border:1px solid #bbb"></div> LOW (0)</div>
+      <span style="font-size:12px;color:#999">Tap inputs to toggle</span>
+    </div>
+    <div class="gates-grid" id="gates-grid"></div>
+  </div>
+  <div class="challenge-box">
+    <div class="challenge-title" id="chal-title"></div>
+    <div class="challenge-desc" id="chal-desc"></div>
+    <div class="chal-nav">
+      <button class="chal-btn" onclick="prevC()">← Prev</button>
+      <button class="chal-btn" onclick="nextC()">Next →</button>
+      <span class="chal-status" id="chal-status"></span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: Circuit Sandbox -->
+<div class="panel" id="tab2">
+  <div class="toolbar">
+    <span class="tb-label">Add:</span>
+    <div class="gate-chip" draggable="true" data-gate="INPUT">INPUT</div>
+    <div class="gate-chip" draggable="true" data-gate="AND">AND</div>
+    <div class="gate-chip" draggable="true" data-gate="OR">OR</div>
+    <div class="gate-chip" draggable="true" data-gate="NOT">NOT</div>
+    <div class="gate-chip" draggable="true" data-gate="NAND">NAND</div>
+    <div class="gate-chip" draggable="true" data-gate="NOR">NOR</div>
+    <div class="gate-chip" draggable="true" data-gate="XOR">XOR</div>
+    <div class="gate-chip" draggable="true" data-gate="OUTPUT">OUTPUT</div>
+    <div class="tb-sep"></div>
+    <button class="tb-btn danger" onclick="clearAll()">Clear</button>
+  </div>
+  <div class="canvas-area" id="canvas">
+    <svg id="circuit" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="hint" id="hint">Click a gate button above to select it, then click on the canvas to place it · Click output pin → input pin to connect</div>
+  </div>
+</div>
+
+<script>
+/* ───────────── TAB SWITCHING ───────────── */
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
+  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', i===j));
+}
+
+/* ───────────── GATE EXPLORER ───────────── */
+const GATES = [
+  { name:'AND',  sym:'&',   desc:'Output is 1 only if BOTH inputs are 1.', fn:(a,b)=>a&b,   ins:2 },
+  { name:'OR',   sym:'≥1',  desc:'Output is 1 if at least ONE input is 1.', fn:(a,b)=>a|b,  ins:2 },
+  { name:'NOT',  sym:'1',   desc:'Output is the OPPOSITE of the input.',    fn:(a)=>a^1,     ins:1 },
+  { name:'NAND', sym:'!&',  desc:'Output is 0 ONLY when both inputs are 1.', fn:(a,b)=>(a&b)^1, ins:2 },
+  { name:'NOR',  sym:'!≥1', desc:'Output is 1 ONLY when both inputs are 0.', fn:(a,b)=>(a|b)^1, ins:2 },
+  { name:'XOR',  sym:'=1',  desc:'Output is 1 if inputs are DIFFERENT.',    fn:(a,b)=>a^b,   ins:2 },
+];
+const CHALLENGES = [
+  { title:'AND gate basics', desc:'Set both A and B to 1 on the AND gate.', check:s=>s.AND[0]===1&&s.AND[1]===1 },
+  { title:'NOT flip', desc:'Set the NOT input to 1 — the output becomes 0.', check:s=>s.NOT[0]===1 },
+  { title:'OR with one input', desc:'Make the OR gate output 1 using only one input.', check:s=>s.OR[0]===1||s.OR[1]===1 },
+  { title:'XOR vs OR', desc:'Set both XOR inputs to 1 and see how it differs from OR!', check:s=>s.XOR[0]===1&&s.XOR[1]===1 },
+  { title:'NAND surprise', desc:'Set both NAND inputs to 1 — output is 0, opposite of AND!', check:s=>s.NAND[0]===1&&s.NAND[1]===1 },
+];
+const gSt = {}; GATES.forEach(g=>{ gSt[g.name]=Array(g.ins).fill(0); });
+let cIdx = 0;
+
+function renderGates() {
+  const grid = document.getElementById('gates-grid');
+  grid.innerHTML = '';
+  GATES.forEach(g => {
+    const inputs = gSt[g.name];
+    const args = g.ins===1 ? [inputs[0]] : [inputs[0],inputs[1]];
+    const out = g.fn(...args);
+    let inputsHTML = '';
+    for (let i=0;i<g.ins;i++) {
+      inputsHTML += `<div class="io-group">
+        <button class="input-btn ${inputs[i]?'on':''}" onclick="gToggle('${g.name}',${i})">${inputs[i]}</button>
+        <div class="pin-label">${String.fromCharCode(65+i)}</div>
+      </div>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'gate-card';
+    card.innerHTML = `<div class="gate-name">${g.name}</div>
+      <div class="gate-desc">${g.desc}</div>
+      <div class="gate-io">
+        ${inputsHTML}
+        <div class="symbol-box">${g.sym}</div>
+        <span class="arrow">→</span>
+        <div class="io-group">
+          <div class="output-bubble ${out?'high':''}">${out}</div>
+          <div class="pin-label">OUT</div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateChallenge();
+}
+
+function gToggle(name, idx) { gSt[name][idx] ^= 1; renderGates(); }
+
+function updateChallenge() {
+  const c = CHALLENGES[cIdx];
+  document.getElementById('chal-title').textContent = `Challenge ${cIdx+1}/${CHALLENGES.length}: ${c.title}`;
+  document.getElementById('chal-desc').textContent = c.desc;
+  const solved = c.check(gSt);
+  const el = document.getElementById('chal-status');
+  el.textContent = solved ? '✓ Solved!' : `Try it!`;
+  el.className = 'chal-status ' + (solved?'solved':'');
+}
+
+function nextC() { cIdx=(cIdx+1)%CHALLENGES.length; updateChallenge(); }
+function prevC() { cIdx=(cIdx-1+CHALLENGES.length)%CHALLENGES.length; updateChallenge(); }
+renderGates();
+
+/* ───────────── CIRCUIT SANDBOX ───────────── */
+const svg2 = document.getElementById('circuit');
+const canvas = document.getElementById('canvas');
+const GW=90, GH=54;
+const HIGH='#1D9E75', WHIGH='#1D9E75', WLOW='#B4B2A9';
+let nodes=[], wires=[], nextId=1;
+let dragType=null, pendingPin=null;
+let draggingNode=null, dragOffX=0, dragOffY=0;
+let toggleBtns={};
+
+const GATE_FN2 = {
+  AND:(ins)=>ins.length<2?0:ins[0]&ins[1],
+  OR:(ins)=>ins.length<2?0:ins[0]|ins[1],
+  NOT:(ins)=>ins.length<1?1:ins[0]^1,
+  NAND:(ins)=>ins.length<2?1:(ins[0]&ins[1])^1,
+  NOR:(ins)=>ins.length<2?1:(ins[0]|ins[1])^1,
+  XOR:(ins)=>ins.length<2?0:ins[0]^ins[1],
+  INPUT:(ins,n)=>n.state,
+  OUTPUT:(ins)=>ins.length<1?0:ins[0],
+};
+function inCount(t){ return t==='NOT'||t==='OUTPUT'?1:t==='INPUT'?0:2; }
+
+function simulate(){
+  const vis=new Set(), order=[];
+  function visit(id){ if(vis.has(id))return; vis.add(id); wires.filter(w=>w.to===id).forEach(w=>visit(w.from)); order.push(id); }
+  nodes.forEach(n=>visit(n.id));
+  order.forEach(id=>{
+    const n=nodes.find(x=>x.id===id); if(!n||n.type==='INPUT')return;
+    const ins=wires.filter(w=>w.to===n.id).map(w=>{ const s=nodes.find(x=>x.id===w.from); return s?s.output:0; });
+    n.output=GATE_FN2[n.type](ins,n);
+  });
+}
+
+function pinPos(n,role,idx){
+  if(role==='out') return {x:n.x+GW,y:n.y+GH/2};
+  if(inCount(n.type)===1) return {x:n.x,y:n.y+GH/2};
+  return {x:n.x,y:n.y+(idx===0?GH*0.32:GH*0.68)};
+}
+
+function updateToggleBtns(){
+  Object.values(toggleBtns).forEach(b=>b.remove()); toggleBtns={};
+  nodes.filter(n=>n.type==='INPUT').forEach(n=>{
+    const btn=document.createElement('button');
+    btn.className='toggle-btn'+(n.state?' on':'');
+    btn.textContent=n.state?'1':'0';
+    btn.style.width='28px'; btn.style.height='28px';
+    btn.style.left=(n.x+GW/2-14)+'px';
+    btn.style.top=(n.y+GH/2-14)+'px';
+    btn.addEventListener('mousedown',e=>e.stopPropagation());
+    btn.addEventListener('click',e=>{ e.stopPropagation(); n.state^=1; n.output=n.state; simulate(); renderSandbox(); });
+    canvas.appendChild(btn); toggleBtns[n.id]=btn;
+  });
+}
+
+function renderSandbox(){
+  svg2.innerHTML='';
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML=`<marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6Z" fill="${WHIGH}"/></marker>
+  <marker id="al" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6Z" fill="${WLOW}"/></marker>`;
+  svg2.appendChild(defs);
+
+  wires.forEach(w=>{
+    const src=nodes.find(n=>n.id===w.from), dst=nodes.find(n=>n.id===w.to);
+    if(!src||!dst)return;
+    const sp=pinPos(src,'out',0), dp=pinPos(dst,'in',w.toPin);
+    const mx=(sp.x+dp.x)/2, hi=src.output===1;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${sp.x},${sp.y} C${mx},${sp.y} ${mx},${dp.y} ${dp.x},${dp.y}`);
+    p.setAttribute('fill','none'); p.setAttribute('stroke',hi?WHIGH:WLOW);
+    p.setAttribute('stroke-width','2.5'); p.setAttribute('marker-end',hi?'url(#ah)':'url(#al)');
+    svg2.appendChild(p);
+  });
+
+  nodes.forEach(n=>{
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    const hi=n.output===1;
+    const isIO=n.type==='INPUT'||n.type==='OUTPUT';
+    const fill=isIO&&hi?HIGH:isIO?'#f0f0ea':'#fff';
+    const stroke=pendingPin&&pendingPin.id===n.id?'#378ADD':'#ddd';
+
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',n.x); r.setAttribute('y',n.y);
+    r.setAttribute('width',GW); r.setAttribute('height',GH);
+    r.setAttribute('rx',10); r.setAttribute('fill',fill);
+    r.setAttribute('stroke',stroke); r.setAttribute('stroke-width','1.5');
+    g.appendChild(r);
+
+    const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x',n.x+GW/2); lbl.setAttribute('y',n.y+16);
+    lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-size','11');
+    lbl.setAttribute('font-weight','600'); lbl.setAttribute('font-family','system-ui,sans-serif');
+    lbl.setAttribute('fill',isIO&&hi?'#fff':'#999'); lbl.textContent=n.type;
+    g.appendChild(lbl);
+
+    if(n.type!=='INPUT'){
+      const val=document.createElementNS('http://www.w3.org/2000/svg','text');
+      val.setAttribute('x',n.x+GW/2); val.setAttribute('y',n.y+GH-10);
+      val.setAttribute('text-anchor','middle'); val.setAttribute('font-size','14');
+      val.setAttribute('font-weight','700'); val.setAttribute('font-family','system-ui,sans-serif');
+      val.setAttribute('fill',hi?HIGH:'#bbb');
+      val.textContent=n.type==='OUTPUT'?(hi?'● 1':'○ 0'):`= ${n.output}`;
+      g.appendChild(val);
+    }
+
+    for(let i=0;i<inCount(n.type);i++){
+      const p=pinPos(n,'in',i);
+      const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p.x); c.setAttribute('cy',p.y); c.setAttribute('r',6);
+      c.setAttribute('fill','#fff'); c.setAttribute('stroke','#378ADD'); c.setAttribute('stroke-width','2');
+      c.setAttribute('cursor','pointer');
+      c.addEventListener('click',e=>{ e.stopPropagation(); handlePin(n,'in',i); });
+      g.appendChild(c);
+    }
+    if(n.type!=='OUTPUT'){
+      const p=pinPos(n,'out',0);
+      const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p.x); c.setAttribute('cy',p.y); c.setAttribute('r',6);
+      c.setAttribute('fill',hi?HIGH:'#fff'); c.setAttribute('stroke',hi?HIGH:'#378ADD');
+      c.setAttribute('stroke-width','2'); c.setAttribute('cursor','pointer');
+      c.addEventListener('click',e=>{ e.stopPropagation(); handlePin(n,'out',0); });
+      g.appendChild(c);
+    }
+
+    const del=document.createElementNS('http://www.w3.org/2000/svg','text');
+    del.setAttribute('x',n.x+GW-5); del.setAttribute('y',n.y+5);
+    del.setAttribute('text-anchor','end'); del.setAttribute('dominant-baseline','hanging');
+    del.setAttribute('font-size','11'); del.setAttribute('fill','#bbb');
+    del.setAttribute('cursor','pointer'); del.textContent='✕';
+    del.addEventListener('click',e=>{ e.stopPropagation(); nodes=nodes.filter(x=>x.id!==n.id); wires=wires.filter(w=>w.from!==n.id&&w.to!==n.id); simulate(); renderSandbox(); });
+    g.appendChild(del);
+
+    r.addEventListener('mousedown',e=>{
+      draggingNode=n;
+      const rc=canvas.getBoundingClientRect();
+      dragOffX=e.clientX-rc.left-n.x; dragOffY=e.clientY-rc.top-n.y;
+    });
+    svg2.appendChild(g);
+  });
+  updateToggleBtns();
+}
+
+function handlePin(node,role,pinIdx){
+  if(!pendingPin){ pendingPin={id:node.id,role,pinIdx}; renderSandbox(); return; }
+  const a=pendingPin, b={id:node.id,role,pinIdx}; pendingPin=null;
+  if(a.id===b.id){ renderSandbox(); return; }
+  let from,to,toPin;
+  if(a.role==='out'&&b.role==='in'){ from=a.id;to=b.id;toPin=b.pinIdx; }
+  else if(a.role==='in'&&b.role==='out'){ from=b.id;to=a.id;toPin=a.pinIdx; }
+  else{ renderSandbox(); return; }
+  wires=wires.filter(w=>!(w.to===to&&w.toPin===toPin));
+  wires.push({from,to,toPin});
+  simulate(); renderSandbox();
+}
+
+canvas.addEventListener('mousemove',e=>{
+  if(!draggingNode)return;
+  const r=canvas.getBoundingClientRect();
+  draggingNode.x=Math.max(0,Math.min(e.clientX-r.left-dragOffX,r.width-GW));
+  draggingNode.y=Math.max(0,Math.min(e.clientY-r.top-dragOffY,r.height-GH));
+  simulate(); renderSandbox();
+});
+canvas.addEventListener('mouseup',()=>{ draggingNode=null; });
+canvas.addEventListener('click',e=>{
+  if(dragType) return; // placing a gate, don't cancel pin
+  if(pendingPin){ pendingPin=null; renderSandbox(); }
+});
+
+// Click-to-select then click-canvas-to-place
+document.querySelectorAll('.gate-chip').forEach(chip=>{
+  chip.addEventListener('click', e=>{
+    const already = dragType === chip.dataset.gate;
+    document.querySelectorAll('.gate-chip').forEach(c=>c.classList.remove('selected'));
+    if(already){ dragType=null; }
+    else { dragType=chip.dataset.gate; chip.classList.add('selected'); }
+  });
+});
+
+canvas.addEventListener('click', e=>{
+  if(!dragType) return;
+  const r=canvas.getBoundingClientRect();
+  const defOut=(dragType==='NOT'||dragType==='NAND'||dragType==='NOR')?1:0;
+  nodes.push({ id:nextId++, type:dragType,
+    x:Math.max(0,e.clientX-r.left-GW/2),
+    y:Math.max(0,e.clientY-r.top-GH/2),
+    state:0, output:defOut });
+  simulate(); renderSandbox();
+  document.getElementById('hint').style.display='none';
+});
+
+function clearAll(){ nodes=[]; wires=[]; pendingPin=null; Object.values(toggleBtns).forEach(b=>b.remove()); toggleBtns={}; renderSandbox(); }
+simulate(); renderSandbox();
+</script>
+</body>
+</html>
