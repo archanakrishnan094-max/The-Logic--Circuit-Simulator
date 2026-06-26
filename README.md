@@ -44,6 +44,29 @@ _[Add a screenshot or short GIF of the simulator in action here — drag an imag
 ```markdown
 ![Logic Circuit Simulator screenshot](screenshot.png)
 ```
+## Architecture
+
+User
+
+↓
+
+Browser
+
+↓
+
+HTML Interface
+
+↓
+
+JavaScript Logic Engine
+
+↓
+
+Logic Gate Evaluation
+
+↓
+
+Output Display
 
 ---
 
