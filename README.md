@@ -4,9 +4,9 @@ A collection of interactive, browser-based tools built for electronics and power
 
 ---
 
-## 🗂️ Projects
+## 🗂️ Project
 
-### 1. Logic Circuit Simulator
+### Logic Circuit Simulator
 **File:** `circuit-simulator.html`
 
 An interactive digital logic simulator for beginners learning Boolean logic and digital electronics.
@@ -19,41 +19,6 @@ An interactive digital logic simulator for beginners learning Boolean logic and 
 - Fully offline — no internet needed
 
 **Topics covered:** Logic gates, truth tables, Boolean algebra, digital circuit design
-
----
-
-### 2. Power Electronics Simulator
-**File:** `power-electronics-simulator.html`
-
-An interactive simulation tool for studying DC-DC converters and rectifier circuits.
-
-**Features:**
-- 5 circuit topologies: Buck, Boost, Buck-Boost, Half-wave Rectifier, Full-wave Rectifier
-- Adjustable parameters: input voltage, duty cycle, load resistance, frequency
-- Live output metrics: V_out, I_out, Power, Efficiency, Ripple factor
-- Real-time waveform visualization (input vs output)
-- Formula reference and component role explanations
-
-**Topics covered:** DC-DC converters, duty cycle, rectification, ripple, efficiency
-
----
-
-### 3. AI Interview Q&A — Power Electronics & LTSpice
-**File:** `interview-qa.html`
-
-An AI-powered interview preparation tool that generates fresh questions, evaluates your answers, and gives detailed feedback.
-
-**Features:**
-- 5 topic areas: Fundamentals, Converters, Rectifiers & Inverters, LTSpice Setup, Troubleshooting & Debugging
-- 3 difficulty levels: Easy, Medium, Hard
-- AI-generated questions — never the same twice
-- Instant feedback with score (0–10), strengths, gaps, and ideal answer
-- Hint system for when you're stuck
-- Session score tracker and history
-
-**Topics covered:** Power electronics theory, LTSpice simulation, convergence errors, debugging, .op / .tran / .ac analysis
-
----
 
 ## 🚀 How to Use
 
