@@ -35,13 +35,6 @@ An interactive, browser-based logic circuit simulator built for electronics and 
 
 ---
 
-## 📸 Screenshot
-
-_[Add a screenshot or short GIF of the simulator in action here — drag an image into the README on GitHub, or upload to the repo and reference it like below]_
-
-```markdown
-![Logic Circuit Simulator screenshot](screenshot.png)
-```
 ## Architecture
 
 User
@@ -83,6 +76,4 @@ This project was built as part of a hands-on journey from an electronics/VLSI la
 
 ---
 
-## 📄 License
 
-_[Add a license if you want others to reuse/contribute — MIT is a common simple choice for learning projects]_
