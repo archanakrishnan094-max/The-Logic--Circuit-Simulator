@@ -14,8 +14,6 @@ An interactive, browser-based logic circuit simulator built for electronics and 
 - Built entirely with HTML, CSS, and JavaScript — runs fully client-side
 - No installation, no dependencies, no backend — works offline once downloaded
 
-> _Edit this list to match exactly what your simulator supports today._
-
 ---
 
 ## 🛠️ Tech Stack
