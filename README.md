@@ -2,7 +2,7 @@
 
 An interactive, browser-based logic circuit simulator built for electronics and electrical engineering students. Design digital circuits using standard logic gates and see results in real time — no installation, no setup, just open the HTML file (or visit the live demo) in any browser.
 
-🔗 **Live Demo:** _[add your GitHub Pages link here once enabled]_
+🔗 **Live Demo:** [https://github.com/archanakrishnan094-max]
 
 ---
 
